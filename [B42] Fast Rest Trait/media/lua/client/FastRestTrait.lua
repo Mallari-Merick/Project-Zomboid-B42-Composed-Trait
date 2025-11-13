@@ -1,5 +1,5 @@
 -- Register trait
-TraitFactory.addTrait("Composed", "Composed", 6, "You like to sit down and focus on taking your breath back more than anything. You regenerate your stamina 75% faster when sitting.", false, false)
+TraitFactory.addTrait("Composed", "Composed", 6, "You like to sit down and focus on taking your breath back more than anything.", false, false)
 
 -- Function of the trait
 local function FasterRestComposed(player)
@@ -20,33 +20,37 @@ local function FasterRestComposed(player)
     local currentEndurance = stats:getEndurance()
     local maxEndurance = 1.0
 
-    if currentEndurance < maxEndurance then
-        local regenBonus = 0.0001 -- Adjust this value for balance (start small!)
-        local newEndurance = math.min(currentEndurance + regenBonus, maxEndurance)
-        stats:setEndurance(newEndurance)
+    if currentEndurance >= maxEndurance then
+        return
     end
+
+    -- Scale based on Fitness Level (0-10)
+    local fitness = player:getPerkLevel(Perks.Fitness)
+    local baseRegen = 0.000047 -- Base regen bonus
+    local scale = 1 + (fitness * 0.25) -- plus 25% per level in fitness
+    local regenBonus = baseRegen * scale
+
+    stats:setEndurance(math.min(currentEndurance + regenBonus, maxEndurance))
 end
 
-local function FasterRestDynamic()
-    local player = getPlayer()
-    -- Null checker
-    if not player then
+Events.OnPlayerUpdate.Add(function(player)
+    if player then
+        FasterRestComposed(player)
+    end
+end)
+
+-- Dynamic Trait unlocker
+local function CheckComposedUnlock(player, perk, level)
+    if not player or perk ~= Perks.Fitness then
         return
     end
     
-    local fitnessSkill = player:getPerkLevel(Perks.Fitness) -- Check if it's Fitness not fitnessSkill
-    local traits = player:getTraits()
+    local fitness = player:getPerkLevel(Perks.Fitness)
 
-    if not traits then
-        print("Error: traits is nil")
-        return
-    end
-
-    -- Award trait at fitness level 8+
-    if fitnessSkill >= 8 and not player:HasTrait("Composed") then
-        traits:add("Composed")
+    -- Unlock at Fitness >= 8
+    if fitness >= 8 and not player:HasTrait("Composed") then
+        player:getTraits():add("Composed")
     end
 end
 
-Events.OnPlayerUpdate.Add(FasterRestComposed)
-Events.LevelPerk.Add(FasterRestDynamic)
+Events.LevelPerk.Add(CheckComposedUnlock)
