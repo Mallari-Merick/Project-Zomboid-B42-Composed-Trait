@@ -1,5 +1,5 @@
 -- Register trait
-TraitFactory.addTrait("Composed", "Composed", 6, "You like to sit down and focus on taking your breath back more than anything. You regenerate your stamina 75% faster when sitting.", false, false)
+TraitFactory.addTrait("Composed", "Composed", 6, "You like to sit down and focus on taking your breath back more than anything.", false, false)
 
 -- Function of the trait
 local function FasterRestComposed(player)
